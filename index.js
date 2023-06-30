@@ -1,23 +1,13 @@
-Developer: Djfaiz
-Name: Poketwo-Autocatcher
-Version: V1
-Description: bot to help users with catching Pokemons
-@Supported: poketwo/pokemon
-STAR THIS REPO FOR IT TO WORK
-*/
-
 const Discord = require('discord.js-self');
-const client = new Discord.Client()
+const client = new Discord.Client();
 const express = require('express');
 const ImageHash = require('image-hash');
 const fs = require('fs');
 const axios = require('axios');
 const chalk = require("chalk");
-
-const config = require('./config.json')
+const config = require('./config.json');
 const targetHash = require('./namefix.json');
-
-const allowedChannels = ["CATCH_CHANNEL_ID1","CATCH_CHANNEL_ID2" , "CATCH_CHANNEL_ID3"]; // Add your allowed channel IDs to this array or leave it like [] if you want to it to catch from all channels
+const allowedChannels = ["CATCH_CHANNEL_ID1", "CATCH_CHANNEL_ID2", "CATCH_CHANNEL_ID3"];
 
 //------------------------- KEEP-ALIVE--------------------------------//
 
@@ -96,55 +86,56 @@ client.on('message', message => {
 //----------------------------AUTOCATCHER--------------------------------------//
 
 // On message event
-client.on('messageCreate', async msg => {
+function findOutput(input) {
+  if (targetHash.hasOwnProperty(input)) {
+    return targetHash[input];
+  } else {
+    return input;
+  }
+}
+client.on('messageCreate', async (msg) => {
+  const Pokebots = ["716390085896962058", "874910942490677270"];
   
-const Pokebots = ["716390085896962058","874910942490677270"]; //Poketwo ,pokename
-   if (allowedChannels.length > 0 && !allowedChannels.includes(message.channel.id)) {
-    return; 
- }
-  if(Pokebots.includes(message.author.id)) {
-     let preferredURL = null; 
-    message.embeds.forEach((e) => {
+  if (allowedChannels.length > 0 && !allowedChannels.includes(msg.channel.id)) {
+    return;
+  }
+  if (Pokebots.includes(msg.author.id)) {
+    let preferredURL = null;
+    msg.embeds.forEach((e) => {
       if (e.image) {
         const imageURL = e.image.url;
         if (imageURL.includes("pokemon.jpg")) {
-          preferredURL = imageURL; 
+          preferredURL = imageURL;
         } else if (imageURL.includes("pokemon.jpg") && !preferredURL) {
-          preferredURL = imageURL; 
+          preferredURL = imageURL;
         }
       }
     });
-
     if (preferredURL) {
       let url = preferredURL;
- try {
-      const hash = await calculateHash(preferredURL);
-
-      console.log('Target Hash:', targetHash);
-      console.log('Image Hash:', hash);
-
-      if (hash === targetHash) {
-        const pokemonName = getPokemonName(targetHash);
-        console.log('Pokemon caught:', pokemonName);
-        message.reply(`@poketwo c ${pokemonName}!`);
-      } else {
-        console.log('Not a match!');
+      try {
+        const hash = await calculateHash(preferredURL);
+        console.log('Target Hash:', targetHash);
+        console.log('Image Hash:', hash);
+        if (hash === targetHash) {
+          const pokemonName = getPokemonName(targetHash);
+          console.log('Pokemon caught:', pokemonName);
+          msg.reply(`@poketwo c ${pokemonName}!`);
+        } else {
+          // Code for sending more
+        }
+      } catch (error) {
+        console.error('Error:', error);
       }
-    } catch (error) {
-      console.error('Error:', error.message);
     }
   }
 });
 
-const calculateHash = async (url) => {
-  const response = await axios.get(url, { responseType: 'arraybuffer' });
-  const imageData = Buffer.from(response.data, 'binary');
-  const hash = await ImageHash.hash(imageData);
-  return hash;
-};
-
-const getPokemonName = (hash) => {
-  return pokemonData[hash] || 'Unknown Pokémon';
-};
-
-client.login(config.TOKEN) 
+async def calculateHash(url):
+  response = await axios.get(url, { 'responseType': 'arraybuffer' })
+  imageData = bytes(response.data, 'binary')
+  hash = await ImageHash.hash(imageData)
+  return hash
+def getPokemonName(hash):
+  return pokemonData[hash] if hash in pokemonData else 'Unknown Pokémon'
+client.login(config.TOKEN)
