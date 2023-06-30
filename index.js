@@ -1,8 +1,7 @@
-/*
-@Developer: 🔥⃤•AK_ØPᵈᵉᵛ✓#6326
+Developer: Djfaiz
 Name: Poketwo-Autocatcher
 Version: V1
-Description: bot to help users with catching pokemons
+Description: bot to help users with catching Pokemons
 @Supported: poketwo/pokemon
 STAR THIS REPO FOR IT TO WORK
 */
@@ -10,10 +9,14 @@ STAR THIS REPO FOR IT TO WORK
 const Discord = require('discord.js-self');
 const client = new Discord.Client()
 const express = require('express');
-const { ocrSpace } = require('ocr-space-api-wrapper');
+const ImageHash = require('image-hash');
+const fs = require('fs');
+const axios = require('axios');
+const chalk = require("chalk");
 
 const config = require('./config.json')
-const json = require('./namefix.json');
+const targetHash = require('./namefix.json');
+
 const allowedChannels = ["CATCH_CHANNEL_ID1","CATCH_CHANNEL_ID2" , "CATCH_CHANNEL_ID3"]; // Add your allowed channel IDs to this array or leave it like [] if you want to it to catch from all channels
 
 //------------------------- KEEP-ALIVE--------------------------------//
@@ -31,8 +34,8 @@ app.listen(process.env.PORT || 3000);
 
 
 function findOutput(input) {
-  if (json.hasOwnProperty(input)) {
-    return json[input];
+  if (targetHash.hasOwnProperty(input)) {
+    return targetHash[input];
   } else {
     return input;
   }
@@ -42,7 +45,7 @@ function findOutput(input) {
 //-------------------------READY HANDLER+SPAMMER-----------------------//
 
 client.on('ready', () => {
-  console.log(`${client.user.username} is ready, Made by 🔥⃤•AK_ØPᵈᵉᵛ✓#6326`) 
+  console.log(`${client.user.username} is ready, Made by Djfaiz`) 
   
   const channel = client.channels.cache.get(config.spamChannelID) 
   
@@ -50,7 +53,7 @@ client.on('ready', () => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 function spam() {
-  channel.send("SPAMMing! (Made by 🔥⃤•AK_ØPᵈᵉᵛ✓#6326) ")
+  channel.send("SPAMMing! (Made by Djfaiz) ")
   const randomInterval = getRandomInterval(1500, 5000); // Random interval for spam between 1 second and 5 seconds
   setTimeout(spam, randomInterval);
 }
@@ -92,8 +95,10 @@ client.on('message', message => {
 
 //----------------------------AUTOCATCHER--------------------------------------//
 
-client.on('message', message => {
-const Pokebots = ["696161886734909481","874910942490677270"]; //sierra ,pokename
+// On message event
+client.on('messageCreate', async msg => {
+  
+const Pokebots = ["716390085896962058","874910942490677270"]; //Poketwo ,pokename
    if (allowedChannels.length > 0 && !allowedChannels.includes(message.channel.id)) {
     return; 
  }
@@ -102,9 +107,9 @@ const Pokebots = ["696161886734909481","874910942490677270"]; //sierra ,pokename
     message.embeds.forEach((e) => {
       if (e.image) {
         const imageURL = e.image.url;
-        if (imageURL.includes("prediction.png")) {
+        if (imageURL.includes("pokemon.jpg")) {
           preferredURL = imageURL; 
-        } else if (imageURL.includes("embed.png") && !preferredURL) {
+        } else if (imageURL.includes("pokemon.jpg") && !preferredURL) {
           preferredURL = imageURL; 
         }
       }
@@ -112,34 +117,34 @@ const Pokebots = ["696161886734909481","874910942490677270"]; //sierra ,pokename
 
     if (preferredURL) {
       let url = preferredURL;
- 
-          async function main() {
-            try {
-              const res1 = await ocrSpace(url, { apiKey: `${config.ocrSpaceApiKey}`});
-              const name1 = res1.ParsedResults[0].ParsedText.split('\r')[0];
-              const name5 = name1.replace(/Q/g, 'R');
-              const name = findOutput(name5);
-              message.channel.send(`<@716390085896962058> c ${name}`)
-                .then(a => { }).catch(error => {
-                console.error(error);
-                const channel = client.channels.cache.get(config.errorChannelID) 
-                channel.send(error)
-              })
-              console.log("[" + message.guild.name + "/#" + message.channel.name + "] " + name) 
-              const channel5 = client.channels.cache.get(config.logChannelID) 
-              channel5.send("[" + message.guild.name + "/#" + message.channel.name + "] " + "**__" + name + "__**"  + " made by 🔥⃤•AK_ØPᵈᵉᵛ✓#6326").then(b => { }).catch(error => {
-                console.error(error);
-                const channel = client.channels.cache.get(config.errorChannelID)
-                channel.send(error)
-              })
-            } catch (error) {
-              console.error(error);
-              const channel = client.channels.cache.get(config.errorChannelID)
-              channel.send(error)
-            } }
-          main()
-        } 
-    
+ try {
+      const hash = await calculateHash(preferredURL);
+
+      console.log('Target Hash:', targetHash);
+      console.log('Image Hash:', hash);
+
+      if (hash === targetHash) {
+        const pokemonName = getPokemonName(targetHash);
+        console.log('Pokemon caught:', pokemonName);
+        message.reply(`@poketwo c ${pokemonName}!`);
+      } else {
+        console.log('Not a match!');
+      }
+    } catch (error) {
+      console.error('Error:', error.message);
+    }
   }
-})
+});
+
+const calculateHash = async (url) => {
+  const response = await axios.get(url, { responseType: 'arraybuffer' });
+  const imageData = Buffer.from(response.data, 'binary');
+  const hash = await ImageHash.hash(imageData);
+  return hash;
+};
+
+const getPokemonName = (hash) => {
+  return pokemonData[hash] || 'Unknown Pokémon';
+};
+
 client.login(config.TOKEN) 
